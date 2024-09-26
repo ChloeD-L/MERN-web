@@ -24,6 +24,22 @@ app.use(
 );
 app.use(express.json());
 
+const MONGODB_URL = process.env.MONGODB_URL;
+
+if (!MONGODB_URL) {
+  throw new Error("MONGODB_URL is not defined in environment variables");
+}
+
+mongoose
+  .connect(MONGODB_URL)
+  .then(() => {
+    console.log(`Connected to MongoDB`);
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  })
+  .catch((err) => {
+    console.error("Failed to connect to MongoDB", err);
+  });
+
 app.get("/decks", async (req: Request, res: Response) => {
   const decks = await DeckModel.find();
   // console.log(decks);
@@ -42,18 +58,13 @@ app.get("/", (req: Request, res: Response) => {
   res.send("hello world");
 });
 
-const MONGODB_URL = process.env.MONGODB_URL;
-
-if (!MONGODB_URL) {
-  throw new Error("MONGODB_URL is not defined in environment variables");
-}
-
-mongoose
-  .connect(MONGODB_URL)
-  .then(() => {
-    console.log(`Connected to MongoDB`);
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-  })
-  .catch((err) => {
-    console.error("Failed to connect to MongoDB", err);
-  });
+app.delete("/deck/:deckId", async (req: Request, res: Response) => {
+  const deckId = req.params.deckId;
+  const deck = await DeckModel.findByIdAndDelete(deckId);
+  res.json(
+    //   {
+    //   message: "successfullu deleted the entity",
+    // }
+    deck
+  );
+});
